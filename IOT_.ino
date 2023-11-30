@@ -1,34 +1,61 @@
+// Library needed for GPS
+#include <Wire.h>
+#include <Adafruit_GPS.h>
+
 // Pin Definitions
 // Not working pins:A3 A4 A2 A1, 11 12 6 9 
+// Pin for Temperature and Hall Effect Sensor
 #define LM35_TEMP_SENSOR_PIN A5
 #define HALL_3144_SENSOR_PIN A0
+
+// "Pin" for GPS
+Adafruit_GPS GPS(&Serial1);
+
+// Pin for Testing
 #define TEST_PIN 5
 
 void setup() {
-  // Start serial communication at 9600 baud
-  Serial.begin(9600);
+  // Initialize Serial Monitor
+  Serial.begin(115200);
+
+  // Initialize GPS
+  while (!Serial) delay(10);
+  Serial.println("Adafruit GPS Feather M0 Test");
+  // GPS Setup
+  GPS.begin(115200);
+  // uncomment this line to turn on RMC (recommended minimum) and GGA (fix data) including altitude
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  // Set the update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);  
   
   // Set pin modes to test board
   pinMode(TEST_PIN, INPUT);
+  
 }
 
 void loop() {
-  // Temperature Measurement
+  // Temperature Sensor Reading
   float temperatureC = getTemperatureC();
   float temperatureF = celsiusToFahrenheit(temperatureC);
-
-  // Display Temperature
-  displayTemperature(temperatureC, temperatureF);
-
-  // Hall Effect Sensor Reading
+  // Hall Effect Sensor Reading 
   int hallSensorValue = analogRead(HALL_3144_SENSOR_PIN);
-
   // Value For Testing
   int testValue = digitalRead(TEST_PIN);
-
-  // Print Sensor Values
-  printSensorValues(hallSensorValue, testValue);
-
+  
+  // Display Temperature
+  displayTemperature(temperatureC, temperatureF);
+  // Display Hall effect Sensor
+  displayHallEffectSensor( hallSensorValue, digitalRead(TEST_PIN));
+  // Print GPS Values 
+  // TODO : Go outside to make it work, may take time
+  displayGPS();
+  // TODO: remove this if not needed
+  if (GPS.newNMEAreceived()) {
+    if (!GPS.parse(GPS.lastNMEA())) {
+      return;
+    }
+  }
+  
   // Change to get more/less frequent readings
   delay(500);
 }
@@ -45,6 +72,25 @@ float celsiusToFahrenheit(float temperatureC) {
   return (temperatureC * 9.0 / 5.0) + 32.0;
 }
 
+void displayGPS() {
+  // Display GPS Data
+  Serial.print("Location: ");
+  Serial.print(GPS.latitudeDegrees, 4);
+  Serial.print(", ");
+  Serial.print(GPS.longitudeDegrees, 4);
+  Serial.print("  Fix: ");
+  Serial.print((int)GPS.fix);
+  Serial.print("  Satellites: ");
+  Serial.println((int)GPS.satellites);
+  // Display Time Data
+  Serial.print("  Time: ");
+  Serial.print(GPS.hour, DEC);
+  Serial.print(':');
+  Serial.print(GPS.minute, DEC);
+  Serial.print(':');
+  Serial.println(GPS.seconds, DEC);
+}
+
 // Function to display temperature
 void displayTemperature(float temperatureC, float temperatureF) {
   Serial.print("Temperature : ");
@@ -57,9 +103,9 @@ void displayTemperature(float temperatureC, float temperatureF) {
 }
 
 // Function to print sensor values
-void printSensorValues(int hallSensorValue, int testValue) {
+void displayHallEffectSensor(int hallSensorValue, int testValue) {
   Serial.print("Hall Effect Sensor Value: ");
   Serial.println(hallSensorValue);
-  // Serial.print("Test Value: ");
-  // Serial.println(testValue);
+  Serial.print("Test Value: ");
+  Serial.println(testValue);
 }
