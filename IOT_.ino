@@ -1,50 +1,65 @@
-#define TempPin A5
-
-// A3 A4 A2 A1
-#define hallPin A0
-// 11 12 6 9
-int testPin = 5;
-
+// Pin Definitions
+// Not working pins:A3 A4 A2 A1, 11 12 6 9 
+#define LM35_TEMP_SENSOR_PIN A5
+#define HALL_3144_SENSOR_PIN A0
+#define TEST_PIN 5
 
 void setup() {
-  // Commencer la communication série à un débit de 9600 bauds
+  // Start serial communication at 9600 baud
   Serial.begin(9600);
-  pinMode(testPin, INPUT);
+  
+  // Set pin modes to test board
+  pinMode(TEST_PIN, INPUT);
 }
 
 void loop() {
-  // Obtenir la lecture de tension de l'LM35
-  int lecture = analogRead(TempPin);
+  // Temperature Measurement
+  float temperatureC = getTemperatureC();
+  float temperatureF = celsiusToFahrenheit(temperatureC);
 
-  // Convertir cette lecture en tension
-  float tension = lecture * (5.0 / 1023.0);
+  // Display Temperature
+  displayTemperature(temperatureC, temperatureF);
 
-  // Convertir la tension en température en Celsius
-  float temperatureC = tension * 100;
+  // Hall Effect Sensor Reading
+  int hallSensorValue = analogRead(HALL_3144_SENSOR_PIN);
 
-  // Afficher la température en Celsius
+  // Value For Testing
+  int testValue = digitalRead(TEST_PIN);
+
+  // Print Sensor Values
+  printSensorValues(hallSensorValue, testValue);
+
+  // Change to get more/less frequent readings
+  delay(500);
+}
+
+// Function to read temperature from LM35 sensor
+float getTemperatureC() {
+  int sensorReading = analogRead(LM35_TEMP_SENSOR_PIN);
+  float voltage = sensorReading * (5.0 / 1023.0);
+  return voltage * 100;
+}
+
+// Function to convert Celsius to Fahrenheit
+float celsiusToFahrenheit(float temperatureC) {
+  return (temperatureC * 9.0 / 5.0) + 32.0;
+}
+
+// Function to display temperature
+void displayTemperature(float temperatureC, float temperatureF) {
   Serial.print("Temperature : ");
   Serial.print(temperatureC);
   Serial.print("\xC2\xB0"); // affiche le symbole degré
   Serial.print("C  |  ");
-
-  // Afficher la température en Fahrenheit
-  float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
   Serial.print(temperatureF);
   Serial.print("\xC2\xB0"); // affiche le symbole degré
   Serial.println("F");
+}
 
-  // Contrôler les LEDs en fonction de la température
-  // controlerLEDs(temperatureC);
-
-  int sensorValue = analogRead(hallPin);
-  int testValue = digitalRead(testPin);
-
-  // Print the sensor value to the Serial Monitor
+// Function to print sensor values
+void printSensorValues(int hallSensorValue, int testValue) {
   Serial.print("Hall Effect Sensor Value: ");
-  Serial.println(sensorValue);
-  Serial.print("Test Value: ");
-  Serial.println(testValue);
-
-  delay(500); // attendre une seconde entre les lectures
+  Serial.println(hallSensorValue);
+  // Serial.print("Test Value: ");
+  // Serial.println(testValue);
 }
