@@ -1,6 +1,10 @@
 // Library needed for GPS
 #include <Wire.h>
 #include <Adafruit_GPS.h>
+#include <SPI.h>
+#include <Adafruit_LIS3DH.h>
+#include <Adafruit_Sensor.h>
+
 
 // Pin Definitions
 // Not working pins:A3 A4 A2 A1, 11 12 6 9 
@@ -8,8 +12,11 @@
 #define LM35_TEMP_SENSOR_PIN A5
 #define HALL_3144_SENSOR_PIN A0
 
-// "Pin" for GPS
+// Init for GPS
 Adafruit_GPS GPS(&Serial1);
+
+// Init for I2C
+Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 
 // Pin for Testing
 #define TEST_PIN 5
@@ -18,6 +25,8 @@ void setup() {
   // Initialize Serial Monitor
   Serial.begin(115200);
 
+  // Initialize Gyroscope Sensor
+  lis.setRange(LIS3DH_RANGE_2_G);   // 2, 4, 8 or 16 G! 
   // Initialize GPS
   while (!Serial) delay(10);
   Serial.println("Adafruit GPS Feather M0 Test");
@@ -55,7 +64,12 @@ void loop() {
       return;
     }
   }
-  
+
+  // get X Y and Z data at once
+  // TODO : Make the Adafruit 5V and retry the code
+  lis.read();      
+  displayGyroscope();
+
   // Change to get more/less frequent readings
   delay(500);
 }
@@ -81,7 +95,7 @@ void displayGPS() {
   Serial.print("  Fix: ");
   Serial.print((int)GPS.fix);
   Serial.print("  Satellites: ");
-  Serial.println((int)GPS.satellites);
+  Serial.print((int)GPS.satellites);
   // Display Time Data
   Serial.print("  Time: ");
   Serial.print(GPS.hour, DEC);
@@ -93,7 +107,7 @@ void displayGPS() {
 
 // Function to display temperature
 void displayTemperature(float temperatureC, float temperatureF) {
-  Serial.print("Temperature : ");
+  Serial.print("Temperature Value: ");
   Serial.print(temperatureC);
   Serial.print("\xC2\xB0"); // affiche le symbole degré
   Serial.print("C  |  ");
@@ -104,8 +118,17 @@ void displayTemperature(float temperatureC, float temperatureF) {
 
 // Function to print sensor values
 void displayHallEffectSensor(int hallSensorValue, int testValue) {
-  Serial.print("Hall Effect Sensor Value: ");
+  Serial.print("Hall Sensor Value: ");
   Serial.println(hallSensorValue);
   Serial.print("Test Value: ");
   Serial.println(testValue);
+}
+
+// Function to print Gyroscope values
+void displayGyroscope(){
+  Serial.print("Gyroscope Value: ");
+  Serial.print("X:  "); Serial.print(lis.x);
+  Serial.print("\tY:  "); Serial.print(lis.y);
+  Serial.print("  \tZ:  "); Serial.print(lis.z);
+  Serial.println();
 }
