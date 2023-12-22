@@ -1,8 +1,6 @@
 // Library needed for GPS
-#include <Wire.h>
-#include <Adafruit_GPS.h>
-#include <SPI.h>
-#include <Adafruit_LIS3DH.h>
+//#include <Adafruit_GPS.h>
+//#include <Adafruit_LIS3DH.h>
 #include <Adafruit_Sensor.h>
 
 #include <lmic.h>
